@@ -1,23 +1,5 @@
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { UserProvider } from './context/UserContext';
-import AppNavigator from './navigation/AppNavigator';
-
-const App = () => {
-    return (
-//        <UserProvider>
-            <NavigationContainer>
-                <AppNavigator />
-            </NavigationContainer>
-//        </UserProvider>
-    );
-};
-
-export default App;
-
-/*
 // App.js
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from "./screens/HomeScreen";
@@ -72,10 +54,44 @@ const App = () => {
 };
 
 export default App;
-*/
+
 
 /*
+/*import React from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { UserProvider } from './context/UserContext';
+import AppNavigator from './navigation/AppNavigator';
+import AboutScreen from './screens/AboutScreen';
+import HomeScreen from "./screens/HomeScreen";
 
+import { createStackNavigator } from '@react-navigation/stack';
+import {AuthProvider} from "./context/AuthContext";
+import {CartProvider} from "./context/CartContext";
+const Stack = createStackNavigator();
+
+
+const App = () => {
+    return (
+   *//*     <AuthProvider>
+            <CartProvider>
+                <UserProvider>*//*
+            <NavigationContainer initialRouteName="Home">
+                               <Stack.Screen name="Home" component={HomeScreen} />
+                               <Stack.Screen name="About" component={AboutScreen} />
+                               <Stack.Screen name="Shop" component={ShopScreen} />
+                               <Stack.Screen name="Login" component={LoginScreen} />
+                               <Stack.Screen name="Signup" component={SignUpScreen} />
+                               <Stack.Screen name="MyAccount" component={MyAccountScreen} />
+
+            </NavigationContainer>
+     *//*           </UserProvider>
+            </CartProvider>
+        </AuthProvider>*//*
+    );
+};
+
+export default App;*/
+/*
 import React, { useState, useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { AuthProvider } from './context/AuthContext'; // Ensure this context manages authentication state

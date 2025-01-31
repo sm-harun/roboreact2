@@ -1,10 +1,11 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {useAuth} from "../context/AuthContext";
 
 const BASE_URL = 'http://localhost:8083/api2'; // Replace with your actual api2 base URL
 
 const api2 = {
     // Improved api2 Fetch with JWT
-    fetchWithAuth: async (url, options = {}) => {
+    useAuth: async (url, options = {}) => {
         const token = await AsyncStorage.getItem('jwt');
         const headers = {
             ...options.headers,

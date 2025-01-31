@@ -29,9 +29,8 @@ public class UserService {
         return userRepository.save(user);
     }
 
-
-    public Mono<String> login(String username, String password) {
-        return userRepository.findByUsername(username)
+    public Mono<String> login(String email, String password) {
+        return userRepository.findByEmail(email)
                 .flatMap(user -> {
                     BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
                     if (encoder.matches(password, user.getPassword())) {
@@ -43,24 +42,26 @@ public class UserService {
                 });
     }
 
-    public Mono<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
-    }
-    public Mono<User> createUser(User user) {
-        return userRepository.save(user);
-    }
-    public Mono<User> findUserById(Long id) {
-        return userRepository.findById(id);
-    }
-    public Flux<User> findAllUsers() {
-        return userRepository.findAll();
-    }
-
     public Flux<User> getAllUsers() {
         return userRepository.findAll();
         // Get all users
     }
 
+    public Mono<User> findUserById(Long id) {
+        return userRepository.findById(id);
+    }
+
+    public Mono<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }
+    public Mono<User> checkUserCredentials(String email, String password) {
+        return userRepository.findByEmail(email)
+                .filter(user -> user.getPassword().equals(password)); // In practice, use hashed password comparison
+    }
+
+    public Mono<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
 }
 /*
 @Service

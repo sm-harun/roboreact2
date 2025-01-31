@@ -25,7 +25,7 @@ public class SecurityConfig {
 
                 .pathMatchers("/api/users/register", "/api/users/login").permitAll()
               //  .pathMatchers("/api/users/me").authenticated() // Protect the authentication endpoint
-
+//                .pathMatchers("/api/courses/**").permitAll() // Require authentication for courses
                 .anyExchange().authenticated();
 
         return http.build();
@@ -33,7 +33,7 @@ public class SecurityConfig {
 
     }
 
-  /*  @Bean
+   @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowCredentials(true); // Allow credentials
@@ -44,7 +44,7 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration); // Apply CORS configuration for all routes
         return source;
-    }*/
+    }
 
 }
 /*

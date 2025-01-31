@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert } from 'react-native';
-import {createProduct} from "../utils/api2";
+import { createProduct } from "../utils/api";
 
 const AddProduct = ({ productId, onProductAdded }) => {
     const [title, setTitle] = useState('');

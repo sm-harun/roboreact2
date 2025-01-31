@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import HomeScreen from "../screens/HomeScreen";
 import AboutScreen from "../screens/AboutScreen";
 import ShopScreen from "../screens/ShopScreen";
 import LoginScreen from "../screens/LoginScreen";
@@ -30,15 +31,17 @@ const AppNavigator = () => {
 
         return (
             <NavigationContainer>
-                    <Stack.Navigator initialRouteName="About">
-                            <Stack.Screen name="About" component={AboutScreen} />
-                  /*          <Stack.Screen name="Shop" component={ShopScreen} />
+                    <Stack.Navigator initialRouteName="Home">
                             <Stack.Screen name="Home" component={HomeScreen} />
+                            <Stack.Screen name="About" component={AboutScreen} />
+                            <Stack.Screen name="Shop" component={ShopScreen} />
 
+                            {/* Public access screens */}
                             <Stack.Screen name="Login" component={LoginScreen} />
                             <Stack.Screen name="Signup" component={SignupScreen} />
 
-                            {user && user.role === 'member' && (
+                            {/* Private access for logged-in members */}
+                           {user && user.role === 'member' && (
                                 <>
                                         <Stack.Screen name="MyAccount" component={MyAccountScreen} />
                                         <Stack.Screen name="Courses" component={CoursesScreen} />
@@ -54,16 +57,17 @@ const AppNavigator = () => {
                                         <Stack.Screen name="CompetitionDetails" component={CompetitionDetailsScreen} />
                                         <Stack.Screen name="Quizzes" component={QuizListScreen} />
                                         <Stack.Screen name="Feedback" component={FeedbackScreen} />
-                              </>
+                                </>
                             )}
 
+                            {/* Admin-specific screens */}
                             {user && user.role === 'admin' && (
                                 <>
                                         <Stack.Screen name="Careers" component={CareersScreen} />
                                         <Stack.Screen name="Partners" component={PartnerScreen} />
                                         <Stack.Screen name="Support" component={SupportScreen} />
                                 </>
-                            )}*/
+                            )}
                     </Stack.Navigator>
             </NavigationContainer>
         );
