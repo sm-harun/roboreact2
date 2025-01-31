@@ -48,10 +48,10 @@ public class UserController {
 
     @PostMapping("/register")
     public Mono<User> createUser(@RequestBody User user) {
-        return userService.createUser(user)
-                .doOnSuccess(savedUser -> {
+        return userService.registerUser(user);
+               /* .doOnSuccess(savedUser -> {
                     // Logic to log or handle the newly created user if necessary
-                });
+                });*/
     }
     @PostMapping("/login")
     public Mono<ResponseEntity<String>> loginUser(@RequestBody LoginRequest loginRequest) {
@@ -62,7 +62,7 @@ public class UserController {
         //    .switchIfEmpty(Mono.error(new Exception("Login failed!"))); // Handle failed login attempts
     }
 
-    @GetMapping("/me") // Endpoint to check current user's authentication status
+    @GetMapping("/check/me") // Endpoint to check current user's authentication status
     public Mono<ResponseEntity<User>> checkUserAuthentication(@AuthenticationPrincipal User user) {
         if (user != null) {
             return Mono.just(ResponseEntity.ok(user)); // Return authenticated user's information
@@ -75,6 +75,19 @@ public class UserController {
     @GetMapping
     public Flux<User> getAllUsers() {
         return userService.getAllUsers();
+    }
+    @GetMapping("/{id}")
+    public Mono<User> findUserById(@PathVariable Long id) {
+        return userService.findUserById(id);
+    }
+  @GetMapping("/username/{username}")
+    public Mono<User> findByUsername(String username) {
+        return userService.findByUsername(username);
+    }
+
+    @GetMapping("/email/{email}")
+    public Mono<User> findByEmail(String email) {
+        return userService.findByEmail(email);
     }
 }
 

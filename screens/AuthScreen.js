@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import api2 from '../utils/api2'; // Import your API functions
+import login from '../utils/api'; // Import your API functions
 
 const AuthScreen = ({ navigation }) => {
     const [username, setUsername] = useState('');
@@ -11,7 +11,7 @@ const AuthScreen = ({ navigation }) => {
     const handleLogin = async () => {
         const credentials = { username, password };
         try {
-            const response = await api2.loginUser(credentials);
+            const response = await login(credentials);
             if (response.token) {
                 // Store token in AsyncStorage
                 await AsyncStorage.setItem('jwt', response.token);

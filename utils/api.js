@@ -5,7 +5,7 @@ const api = axios.create({
     baseURL: 'http://localhost:8083/api', // Replace with your actual backend API URL
 });
 
-// Interceptors for adding JWT to headers
+/*// Interceptors for adding JWT to headers
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem('token'); // Adjust based on where you store your token
@@ -17,8 +17,8 @@ api.interceptors.request.use(
     (error) => {
         return Promise.reject(error);
     }
-);
-
+);*/
+const getTimelineEvents = () => api.get('/timeline');
 // User Authentication
 const login = (username, password) => api.post('/auth/login', { username, password });
 const signup = (username, password) => api.post('/auth/signup', { username, password });

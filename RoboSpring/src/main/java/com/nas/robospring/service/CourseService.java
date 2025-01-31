@@ -15,7 +15,9 @@ public class CourseService {
     public Flux<Course> getAllCourses() {
         return courseRepository.findAll(); // Retrieve all courses
     }
-
+    public Mono<Course> getCourseById(Long id) {
+        return courseRepository.findById(id); // Make sure this method is defined in your repository
+    }
     public Mono<Course> createCourse(Course course) {
         return courseRepository.save(course); // Create a new course
     }
@@ -39,6 +41,8 @@ public class CourseService {
         // This method will interact with the repository to get courses for a specific user
         return courseRepository.findByUserId(userId); // Make sure this method is defined in your repository
     }
+
+
 }
 /*
 package com.nas.robospring.service;
