@@ -15,13 +15,15 @@ import java.time.LocalDateTime;
 public class Course {
     @Id
     private Long id;
-    private String title;
+    private  String title;
     private String description;
     private String level; // e.g., Low Grade, High School, College, University
     private Integer duration; // Duration in hours
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private Long userId;
+
+
 
     public Long getId() {
         return id;

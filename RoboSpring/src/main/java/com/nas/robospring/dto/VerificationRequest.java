@@ -10,5 +10,4 @@ public class VerificationRequest {
     private double amount; // Amount to be charged
     private String paymentMethod; // Token or payment method ID
 
-    // Getters and Setters
 }

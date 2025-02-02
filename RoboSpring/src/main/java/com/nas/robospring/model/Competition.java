@@ -18,23 +18,23 @@ import java.time.LocalDateTime;
 public class Competition {
 
     @Id
-    private Integer id;
+    private Long id;
     private String name;
     private String description;
     private String location;
     private LocalDate startDate;
     private Double price; // Can be null to indicate "Call for price"
     // private LocalDate registrationDeadline;
+//    private LocalDateTime dueDate; // Due date for the competition
     private LocalDateTime dueDate; // Due date for the competition
-
     private Long userId; // Reference to the user who registered the competition
     private String website; // Link to the competition website
 
-    public Integer getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(Integer id) {
+    public void setId(Long id) {
         this.id = id;
     }
 
