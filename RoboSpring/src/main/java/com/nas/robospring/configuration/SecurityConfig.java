@@ -1,5 +1,6 @@
 package com.nas.robospring.configuration;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -8,12 +9,15 @@ import org.springframework.security.authentication.ReactiveAuthenticationManager
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.server.SecurityWebFilterChain;
+import org.springframework.security.web.server.ServerAuthenticationEntryPoint;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
@@ -22,6 +26,8 @@ import reactor.core.publisher.Mono;
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
+    @Autowired
+    private CustomAuthenticationEntryPoint customAuthenticationEntryPoint; // Use your custom entry point
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -30,19 +36,31 @@ public class SecurityConfig {
     @Bean
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable())  // Disable CSRF for development (not recommended for production)
-                     .authorizeExchange()
+           .csrf(csrf -> csrf.disable())  // Disable CSRF for development (not recommended for production)
+           /*   .exceptionHandling()
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .and()*/
+           /*     .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()*/
+                .authorizeExchange()
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
            .pathMatchers(HttpMethod.GET, "/api/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/signup","/api/auth/login").permitAll() // Allow auth requests
+/*
                 .pathMatchers(HttpMethod.DELETE, "/api/competitions/**").authenticated() // Ensure DELETE is guarded
+*/
 
 //                .pathMatchers(HttpMethod.OPTIONS, "/api/competitions/**").permitAll() // Allow DELETE requests for competitions
 
-                .anyExchange().authenticated();
+                .anyExchange().authenticated()
+                .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(customAuthenticationEntryPoint); // Register your custom entry point
 
 
         return http.build();
+//        return http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 
    @Bean
