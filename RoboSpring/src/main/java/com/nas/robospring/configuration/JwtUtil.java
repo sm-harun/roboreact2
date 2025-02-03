@@ -47,7 +47,57 @@ public class JwtUtil {
         return extractAllClaims(token).getExpiration().before(new Date());
     }
 }
+/*
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+import java.util.Date;
+
+@Component
+public class JwtUtil {
+
+    @Value("${jwt.secret}") // Load secret from configuration
+    private String jwtSecret;
+
+    @Value("${jwt.expiration-in-ms}")
+    private int jwtExpirationInMs = 3600000; // Default expiration time in milliseconds (1 hour)
+
+    // Generate the JWT token
+    public String generateToken(String username) {
+        Date currentDate = new Date();
+        Date expireDate = new Date(currentDate.getTime() + jwtExpirationInMs);
+
+        return Jwts.builder()
+                .setSubject(username) // Set the user identifier
+                .setIssuedAt(currentDate) // Set the issued date
+                .setExpiration(expireDate) // Set the expiration date
+                .signWith(SignatureAlgorithm.HS512, jwtSecret) // Sign the token with the secret and algorithm
+                .compact();
+    }
+
+    // Get username from the token
+    public String getUsernameFromJWT(String token) {
+        Claims claims = Jwts.parser()
+                .setSigningKey(jwtSecret) // Validate the token using the same secret
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getSubject(); // Extract the username
+    }
+
+    // Validate the JWT token
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parser().setSigningKey(jwtSecret).parseClaimsJws(token); // Attempt to parse the token
+            return true; // Token is valid if no exception is thrown
+        } catch (Exception e) {
+            return false; // Handle exceptions to denote token is invalid
+        }
+    }
+}
+ */
 
 /*import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

@@ -17,12 +17,13 @@ import java.util.stream.Collectors;
 public class CustomUserDetails implements UserDetails {
 
     private final User user; // Store the user entity
+  private final List<Role> roles;
+    @Autowired
+    private  RoleRepository roleRepository;
 
-    private final RoleRepository roleRepository;
-
-    public CustomUserDetails(User user, RoleRepository roleRepository) {
+    public CustomUserDetails(User user, List<Role> roles) {
         this.user = user;
-        this.roleRepository = roleRepository;
+        this.roles = roles;
     }
 
 
@@ -43,6 +44,10 @@ public class CustomUserDetails implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return loadAuthorities().collectList().block(); // Loads the authorities as a blocking operation (use cautiously)
+      /*  return roles.stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());*/
+
     }
 
     private Flux<? extends GrantedAuthority> loadAuthorities() {

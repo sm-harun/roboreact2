@@ -26,12 +26,7 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
     private RoleRepository roleRepository; // Inject RoleRepository to fetch roles
     @Override
     public Mono<UserDetails> findByUsername(String username) {
-      /*  return userRepository.findByUsername(username) // Ensure this returns Mono<User>
-                .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with username: " + username)))
-                .map(user -> new org.springframework.security.core.userdetails.User(
-                        user.getUsername(),
-                        user.getPassword(),
-                        mapRolesToAuthorities(user.getRoles()))); // Map user roles to authorities*/
+
         return userRepository.findByUsername(username)
                 .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found: " + username)))
                 .flatMap(user -> {
@@ -52,3 +47,10 @@ public class CustomUserDetailsService implements ReactiveUserDetailsService {
                 .collect(Collectors.toList());
     }
 }
+
+  /*  return userRepository.findByUsername(username) // Ensure this returns Mono<User>
+                .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found with username: " + username)))
+                .map(user -> new org.springframework.security.core.userdetails.User(
+                        user.getUsername(),
+                        user.getPassword(),
+                        mapRolesToAuthorities(user.getRoles()))); // Map user roles to authorities*/

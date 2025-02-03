@@ -1,15 +1,19 @@
 package com.nas.robospring.service;
+import com.nas.robospring.configuration.CustomUserDetails;
+import com.nas.robospring.configuration.JwtTokenProvider;
 import com.nas.robospring.dto.SignUpDto;
 import com.nas.robospring.model.UserWithRoles;
 import com.nas.robospring.repository.RoleRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import com.nas.robospring.model.Order;
 import com.nas.robospring.model.User;
-import com.nas.robospring.repository.OrderRepository;
 import com.nas.robospring.repository.UserRepository;
 import com.nas.robospring.configuration.JwtUtil;
 @Service
@@ -24,7 +28,108 @@ public class UserService {
 
     @Autowired
     private JwtUtil jwtUtil; // JWT utility for generating tokens
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider; // JWT utility for generating tokens
 
+    // Method to register a new user
+    public Mono<ResponseEntity<User>> registerUser(SignUpDto signUpDto) {
+        return userRepository.existsByUsername(signUpDto.getUsername())
+                .flatMap(usernameExists -> {
+                    if (usernameExists) {
+                        return Mono.error(new IllegalArgumentException("Username already exists."));
+                    }
+                    return userRepository.existsByEmail(signUpDto.getEmail());
+                })
+                .flatMap(emailExists -> {
+                    if (emailExists) {
+                        return Mono.error(new IllegalArgumentException("Email already exists."));
+                    }
+                    User user = new User();
+                    user.setUsername(signUpDto.getUsername());
+                    user.setEmail(signUpDto.getEmail());
+                    user.setPassword(passwordEncoder.encode(signUpDto.getPassword())); // Hash the password
+                    return userRepository.save(user)
+                            .map(savedUser -> ResponseEntity.status(HttpStatus.CREATED).body(savedUser)); // Return the created user
+                })
+                .onErrorResume(IllegalArgumentException.class, e ->
+                        Mono.just(ResponseEntity.badRequest().body(null)) // Return 400 for conflicts
+                );
+    }
+    public Mono<UserWithRoles> findUserWithRolesByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .flatMap(user -> roleRepository.findRolesByUserId(user.getId()) // Fetch roles by user ID
+                        .collectList() // Collect roles into a list
+                        .map(roles -> new UserWithRoles(user, roles)) // Create UserWithRoles object
+                );
+    }
+
+   /* public Mono<UserWithRoles> findUserWithRolesByUsername(String username) {
+        return userRepository.findByUsername(username)
+                .flatMap(user -> RoleRepository.findRolesByUserId(user.getId()) // Fetch user roles by user ID
+                        .flatMap(userRole -> roleRepository.findById(userRole.getId())) // Fetch role details for each user role
+                        .collectList() // Collect roles into a list
+                        .map(roles -> new UserWithRoles(user, roles)) // Create UserWithRoles object
+                );
+    }*/
+ /*   public Mono<String> authenticateUser(String username, String password) {
+        return authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(username, password))
+                .map(authentication -> tokenProvider.generateToken(authentication));
+    }*/
+    // Method to authenticate a user
+    public Mono<String> authenticateUser(String username, String password) {
+        return userRepository.findByUsername(username)
+                .switchIfEmpty(userRepository.findByEmail(username)) // Check by email if username not found
+                .flatMap(user -> {
+                    // Check if the password matches the stored hashed password
+                    if (passwordEncoder.matches(password, user.getPassword())) {
+                        String token = jwtUtil.generateToken(user); // Generate a JWT
+                        return Mono.just(token);
+                    } else {
+                        return Mono.error(new RuntimeException("Invalid credentials")); // Failure response
+                    }
+                });
+    }
+
+
+    // Fetch user details along with roles
+    public Mono<UserWithRoles> findUserWithRoles(Long id) {
+        return userRepository.findById(id) // Fetch the user
+                .flatMap(user -> roleRepository.findRolesByUserId(user.getId()) // Fetch roles for the user
+                        .collectList()
+                        .map(roles -> new UserWithRoles(user, roles))); // Map user to UserWithRoles DTO if you have one
+
+    }
+
+    public Flux<User> getAllUsers() {
+        return userRepository.findAll();
+    }
+
+    public Mono<User> findUserById(Long id) {
+        return userRepository.findById(id);
+    }
+   /* public Mono<CustomUserDetails> findByUsername(String username) {
+        return userRepository.findByUsername(username) // Assuming this returns Mono<User>
+                .map(user -> new CustomUserDetails(user, roleRepository)); // Pass both user and roleRepository if necessary
+    }*/
+  /*  public Mono<User> findByUsername(String username) {
+        return userRepository.findByUsername(username);
+    }*/
+   public Mono<CustomUserDetails> findByUsername(String username) {
+       return userRepository.findByUsername(username)
+               .switchIfEmpty(Mono.error(new UsernameNotFoundException("User not found")))
+               .flatMap(user -> roleRepository.findRolesByUserId(user.getId())
+                       .collectList()
+                       .map(roles -> new CustomUserDetails(user, roles)));
+   }
+    public Mono<User> findByEmail(String email) {
+        return userRepository.findByEmail(email);
+    }
+
+    public Mono<User> checkUserCredentials(String email, String password) {
+        return userRepository.findByEmail(email)
+                .filter(user -> passwordEncoder.matches(password, user.getPassword())); // Compare hashed passwords
+    }
+}
 /*    public Mono<User> registerUser(SignUpDto signUpDto) {
         return userRepository.existsByUsername(signUpDto.getUsername())
                 .flatMap(exists -> {
@@ -57,36 +162,84 @@ public class UserService {
                 });
     }*/
 
-    // Fetch user details along with roles
-    public Mono<UserWithRoles> findUserWithRoles(Long id) {
-        return userRepository.findById(id) // Fetch the user
-                .flatMap(user -> roleRepository.findRolesByUserId(user.getId()) // Fetch roles for the user
-                        .collectList()
-                        .map(roles -> new UserWithRoles(user, roles))); // Map user to UserWithRoles DTO if you have one
 
+/*
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository; // Inject your reactive user repository
+
+    @Autowired
+    private PasswordEncoder passwordEncoder; // For hashing passwords
+
+    // Method to register a new user
+    public Mono<ResponseEntity<User>> registerUser(SignUpDto signUpDto) {
+        return userRepository.existsByUsername(signUpDto.getUsername())
+            .flatMap(usernameExists -> {
+                if (usernameExists) {
+                    return Mono.error(new IllegalArgumentException("Username already exists."));
+                }
+                return userRepository.existsByEmail(signUpDto.getEmail());
+            })
+            .flatMap(emailExists -> {
+                if (emailExists) {
+                    return Mono.error(new IllegalArgumentException("Email already exists."));
+                }
+                User user = new User();
+                user.setUsername(signUpDto.getUsername());
+                user.setEmail(signUpDto.getEmail());
+                user.setPassword(passwordEncoder.encode(signUpDto.getPassword())); // Hash the password
+                return userRepository.save(user)
+                    .map(savedUser -> ResponseEntity.status(HttpStatus.CREATED).body(savedUser)); // Return the created user
+            })
+            .onErrorResume(IllegalArgumentException.class, e ->
+                Mono.just(ResponseEntity.badRequest().body(null)) // Return 400 for conflicts
+            );
     }
 
+    // Method to authenticate a user
+    public Mono<String> authenticateUser(String usernameOrEmail, String password) {
+        return userRepository.findByUsername(usernameOrEmail)
+            .switchIfEmpty(userRepository.findByEmail(usernameOrEmail)) // Check by email if username not found
+            .flatMap(user -> {
+                // Check if the password matches the stored hashed password
+                if (passwordEncoder.matches(password, user.getPassword())) {
+                    String token = jwtUtil.generateToken(user); // Generate a JWT
+                    return Mono.just(token);
+                } else {
+                    return Mono.error(new RuntimeException("Invalid credentials")); // Failure response
+                }
+            });
+    }
+
+    // Method to find all users
     public Flux<User> getAllUsers() {
-        return userRepository.findAll();
+        return userRepository.findAll(); // Fetch all users
     }
 
+    // Method to find a user by ID
     public Mono<User> findUserById(Long id) {
-        return userRepository.findById(id);
+        return userRepository.findById(id); // Fetch user by ID
     }
 
+    // Method to find a user by username
     public Mono<User> findByUsername(String username) {
-        return userRepository.findByUsername(username);
+        return userRepository.findByUsername(username); // Fetch user by username
     }
 
+    // Method to find a user by email
     public Mono<User> findByEmail(String email) {
-        return userRepository.findByEmail(email);
-    }
-
-    public Mono<User> checkUserCredentials(String email, String password) {
-        return userRepository.findByEmail(email)
-                .filter(user -> passwordEncoder.matches(password, user.getPassword())); // Compare hashed passwords
+        return userRepository.findByEmail(email); // Fetch user by email
     }
 }
+ */
 /*import com.nas.robospring.dto.SignUpDto;
 import com.nas.robospring.model.Order;
 import com.nas.robospring.model.User;

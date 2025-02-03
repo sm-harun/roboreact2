@@ -10,6 +10,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.reactive.EnableWebFluxSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.config.web.server.SecurityWebFiltersOrder;
 import org.springframework.security.config.web.server.ServerHttpSecurity;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -23,45 +24,71 @@ import org.springframework.web.cors.reactive.CorsConfigurationSource;
 import org.springframework.web.cors.reactive.UrlBasedCorsConfigurationSource;
 import reactor.core.publisher.Mono;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 @Configuration
 @EnableWebFluxSecurity
 public class SecurityConfig {
     @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter; // Your JWT filter should be injected here
+    @Autowired
+    private CustomLoggingFilter customLoggingFilter; // Your JWT filter should be injected here
+    @Autowired
+    private LoggingFilter loggingFilter; // Your JWT filter should be injected here
+    @Autowired
     private CustomAuthenticationEntryPoint customAuthenticationEntryPoint; // Use your custom entry point
+
     @Bean
     public PasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
     }
+ /*   @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/signup","/api/auth/login").permitAll() // Allow                        .pathMatchers(HttpMethod.POST, "/api/competitions").authenticated()
+                        .anyExchange().authenticated()
+                )
+                .httpBasic(withDefaults())
+                .csrf(ServerHttpSecurity.CsrfSpec::disable)
+                .build();
+    }*/
 
     @Bean
+    public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity http) {
+        return http
+                .csrf(csrf -> csrf.disable())
+                .authorizeExchange(exchanges -> exchanges
+                        .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/**").permitAll()
+                        .pathMatchers(HttpMethod.POST, "/api/auth/signup", "/api/auth/login").permitAll()
+                        .anyExchange().authenticated()
+                )
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                )
+                .addFilterAt(jwtAuthenticationFilter, SecurityWebFiltersOrder.AUTHENTICATION)
+                .build();
+    }
+
+  /*  @Bean
     public SecurityWebFilterChain securityFilterChain(ServerHttpSecurity http) throws Exception {
         http
            .csrf(csrf -> csrf.disable())  // Disable CSRF for development (not recommended for production)
-           /*   .exceptionHandling()
-                .authenticationEntryPoint(authenticationEntryPoint)
-                .and()*/
-           /*     .sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()*/
-                .authorizeExchange()
+        .authorizeExchange()
                         .pathMatchers(HttpMethod.OPTIONS, "/**").permitAll()
            .pathMatchers(HttpMethod.GET, "/api/**").permitAll()
                         .pathMatchers(HttpMethod.POST, "/api/auth/signup","/api/auth/login").permitAll() // Allow auth requests
-/*
-                .pathMatchers(HttpMethod.DELETE, "/api/competitions/**").authenticated() // Ensure DELETE is guarded
-*/
-
-//                .pathMatchers(HttpMethod.OPTIONS, "/api/competitions/**").permitAll() // Allow DELETE requests for competitions
-
+//              .pathMatchers(HttpMethod.OPTIONS, "/api/competitions/**").permitAll() // Allow DELETE requests for competitions
                 .anyExchange().authenticated()
                 .and()
                 .exceptionHandling()
-                .authenticationEntryPoint(customAuthenticationEntryPoint); // Register your custom entry point
-
+                .authenticationEntryPoint(new CustomAuthenticationEntryPoint());// Register your custom entry point
 
         return http.build();
 //        return http.addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
-    }
+    }*/
 
    @Bean
     public CorsConfigurationSource corsConfigurationSource() {
@@ -76,9 +103,22 @@ public class SecurityConfig {
         return source;
     }
 
+
 }
+     /*  http.addFilterBefore(jwtAuthenticationFilter, SecurityWebFilterChain.class);
+        // Register your custom logging filter
+        http.addFilterBefore(customLoggingFilter, JwtAuthenticationFilter.class);*/
+          /*    .and()
+                .addFilterBefore(loggingFilter, JwtAuthenticationFilter.class); // add your logging filter before others*/     /* .exceptionHandling()
+                .authenticationEntryPoint((ServerAuthenticationEntryPoint) jwtAuthenticationFilter)
+                .and()*/
 
-
+   /*   .exceptionHandling()
+                .authenticationEntryPoint(authenticationEntryPoint)
+                .and()*/
+   /*     .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()*/
 /*
 
 

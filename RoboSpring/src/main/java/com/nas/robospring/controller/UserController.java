@@ -1,8 +1,5 @@
 package com.nas.robospring.controller;
 import com.nas.robospring.configuration.CustomUserDetails;
-import com.nas.robospring.configuration.JwtUtil;
-import com.nas.robospring.dto.JWTAuthResponse;
-import com.nas.robospring.dto.LoginDto;
 import com.nas.robospring.model.UserWithRoles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,7 +8,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import com.nas.robospring.dto.SignUpDto;
 import com.nas.robospring.model.Course;
 import com.nas.robospring.model.Order;
 import com.nas.robospring.model.User;
@@ -46,21 +42,6 @@ public class UserController {
     public Flux<Order> getOrderHistory(@PathVariable Long userId) {
         return orderService.getOrderHistoryByUserId(Math.toIntExact(userId));
     }
-/*
-    @PostMapping("/signup")
-    public Mono<ResponseEntity<User>> createUser(@RequestBody SignUpDto signUpDto) {
-        return userService.registerUser(signUpDto)
-                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
-    }
-
-    @PostMapping("/login")
-    public Mono<ResponseEntity<JWTAuthResponse>> authenticateUser(@RequestBody LoginDto loginDto) {
-        return userService.authenticateUser(loginDto.getUsername(), loginDto.getPassword())
-                .map(token -> ResponseEntity.ok(new JWTAuthResponse(token)))
-                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                        .body(new JWTAuthResponse("Invalid username or password"))));
-    }*/
 
     @GetMapping("/check/me")
     public Mono<ResponseEntity<CustomUserDetails>> checkUserAuthentication(@AuthenticationPrincipal CustomUserDetails user) {
@@ -82,7 +63,7 @@ public class UserController {
     }
 
     @GetMapping("/username/{username}")
-    public Mono<User> findByUsername(@PathVariable String username) {
+    public Mono<CustomUserDetails> findByUsername(@PathVariable String username) {
         return userService.findByUsername(username);
     }
 
@@ -91,7 +72,34 @@ public class UserController {
         return userService.findByEmail(email);
     }
 }
-/*import com.nas.robospring.dto.JWTAuthResponse;
+/*@GetMapping("/{username}")
+public Mono<ResponseEntity<UserWithRoles>> getUserWithRoles(@PathVariable String username) {
+    return userService.findUserWithRolesByUsername(username)
+            .map(userWithRoles -> ResponseEntity.ok(userWithRoles))
+            .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()));
+}*/
+
+/*
+    @PostMapping("/signup")
+    public Mono<ResponseEntity<User>> createUser(@RequestBody SignUpDto signUpDto) {
+        return userService.registerUser(signUpDto)
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
+    }
+
+    @PostMapping("/login")
+    public Mono<ResponseEntity<JWTAuthResponse>> authenticateUser(@RequestBody LoginDto loginDto) {
+        return userService.authenticateUser(loginDto.getUsername(), loginDto.getPassword())
+                .map(token -> ResponseEntity.ok(new JWTAuthResponse(token)))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new JWTAuthResponse("Invalid username or password"))));
+    }*/
+
+/*
+
+
+
+import com.nas.robospring.dto.JWTAuthResponse;
 import com.nas.robospring.dto.LoginRequest;
 import com.nas.robospring.dto.SignUpDto;
 import com.nas.robospring.model.Course;

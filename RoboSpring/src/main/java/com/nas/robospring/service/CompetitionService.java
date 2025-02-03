@@ -27,10 +27,13 @@ public class CompetitionService {
     public Flux<Competition> getAllCompetitions() {
         return competitionRepository.findAll();
     }
-
     public Mono<Void> deleteCompetition(Long id) {
-        return competitionRepository.deleteById(id);
+        return competitionRepository.deleteById(id)  // Assuming this deletes the competition
+                .then(Mono.empty());  // Return Mono<Void> indicating completion
     }
+  /*  public Mono<Void> deleteCompetition(Long id) {
+        return competitionRepository.deleteById(id);
+    }*/
     // Registration logic can handle pricing information
     public void displayCompetitionDetails(Competition competition) {
         if (competition.getPrice() == null) {

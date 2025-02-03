@@ -1,5 +1,64 @@
 package com.nas.robospring.configuration;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.server.reactive.ServerHttpRequest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
+import org.springframework.web.server.WebFilterChain;
+import reactor.core.publisher.Mono;
+
+@Component
+public class JwtAuthenticationFilter implements WebFilter {
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    @Autowired
+    private ReactiveUserDetailsService userDetailsService; // Your custom user details service
+
+    public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
+        String token = getJWTFromRequest(exchange.getRequest());
+
+        if (token != null && tokenProvider.validateToken(token)) {
+            String username = tokenProvider.getUsernameFromJWT(token); // Extract username from the token
+
+            // Load user details reactively
+            return userDetailsService.findByUsername(username)
+                    .flatMap(userDetails -> {
+                        // Build an authentication token
+                        UsernamePasswordAuthenticationToken authenticationToken =
+                                new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                        return chain.filter(exchange).contextWrite(ReactiveSecurityContextHolder.withAuthentication(authenticationToken));
+                    });
+        }
+                        /*
+                        // Set authentication in the SecurityContext
+                        SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                        return chain.filter(exchange); // Continue processing the exchange
+                    })
+                    .switchIfEmpty(Mono.error(new RuntimeException("User not found"))); // Handle not found user case
+        }
+*/
+
+        return chain.filter(exchange); // Continue filter chain if no valid token is present
+    }
+
+    private String getJWTFromRequest(ServerHttpRequest request) {
+        String authHeader = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7); // Extract token without "Bearer "
+        }
+        return null;
+    }
+}
+/*import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -12,18 +71,19 @@ import org.springframework.security.web.server.authentication.ServerAuthenticati
 import org.springframework.security.web.server.authentication.ServerAuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
+import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
 
 @Component
-public class JwtAuthenticationFilter {
+public class JwtAuthenticationFilter implements WebFilter {
 
     @Autowired
     private JwtTokenProvider tokenProvider;
 
     @Autowired
     private ReactiveUserDetailsService userDetailsService;
-
+    @Override
     public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
         ServerHttpResponse response = exchange.getResponse();
@@ -58,8 +118,52 @@ public class JwtAuthenticationFilter {
         }
         return null;
     }
-}
+}*/
 /*
+@Component
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
+    @Autowired
+    private ReactiveUserDetailsService customUserDetailsService; // Use ReactiveUserDetailsService
+
+    @Override
+    protected void doFilterInternal(ServerWebExchange exchange, FilterChain chain) throws ServletException, IOException {
+        ServerHttpRequest request = exchange.getRequest();
+
+        // Get JWT from the request
+        String token = getJWTfromRequest(request);
+        if (token != null && tokenProvider.validateToken(token)) {
+            String username = tokenProvider.getUsernameFromJWT(token);
+
+            // Load user details reactively
+            customUserDetailsService.findByUsername(username)
+                .flatMap(userDetails -> {
+                    UsernamePasswordAuthenticationToken authenticationToken =
+                        new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
+                    // Set Spring Security
+                    SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+                    return Mono.just(authenticationToken);
+                })
+                .subscribe(); // Subscribe to set the authentication in the context
+        }
+
+        // Proceed with the filter chain
+        chain.doFilter(exchange);
+    }
+
+    private String getJWTfromRequest(ServerHttpRequest request) {
+        String bearerToken = request.getHeaders().getFirst(HttpHeaders.AUTHORIZATION);
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7); // Remove "Bearer " prefix
+        }
+        return null;
+    }
+}
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
