@@ -1,12 +1,106 @@
 package com.nas.robospring.controller;
-
-import com.nas.robospring.dto.LoginRequest;
+import com.nas.robospring.configuration.CustomUserDetails;
+import com.nas.robospring.configuration.JwtUtil;
+import com.nas.robospring.dto.JWTAuthResponse;
+import com.nas.robospring.dto.LoginDto;
+import com.nas.robospring.model.UserWithRoles;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import com.nas.robospring.dto.SignUpDto;
 import com.nas.robospring.model.Course;
 import com.nas.robospring.model.Order;
 import com.nas.robospring.model.User;
 import com.nas.robospring.service.CourseService;
 import com.nas.robospring.service.OrderService;
 import com.nas.robospring.service.UserService;
+@RestController
+@RequestMapping("/api/auth")
+public class UserController {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private  CourseService courseService;
+    @Autowired
+    private  OrderService orderService;
+
+    @GetMapping("/{id}/with-roles") // Define the endpoint for fetching user with roles
+    public Mono<ResponseEntity<UserWithRoles>> getUserWithRoles(@PathVariable Long id) {
+        return userService.findUserWithRoles(id) // Call service method
+                .map(userWithRoles -> ResponseEntity.ok(userWithRoles)) // Return user with roles
+                .defaultIfEmpty(ResponseEntity.notFound().build()); // 404 if not found
+    }
+
+    @GetMapping("/{userId}/enrolled-courses")
+    public Flux<Course> getEnrolledCourses(@PathVariable Long userId) {
+        return courseService.getCoursesByUserId(userId);
+    }
+
+    @GetMapping("/{userId}/order-history")
+    public Flux<Order> getOrderHistory(@PathVariable Long userId) {
+        return orderService.getOrderHistoryByUserId(Math.toIntExact(userId));
+    }
+/*
+    @PostMapping("/signup")
+    public Mono<ResponseEntity<User>> createUser(@RequestBody SignUpDto signUpDto) {
+        return userService.registerUser(signUpDto)
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
+    }
+
+    @PostMapping("/login")
+    public Mono<ResponseEntity<JWTAuthResponse>> authenticateUser(@RequestBody LoginDto loginDto) {
+        return userService.authenticateUser(loginDto.getUsername(), loginDto.getPassword())
+                .map(token -> ResponseEntity.ok(new JWTAuthResponse(token)))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new JWTAuthResponse("Invalid username or password"))));
+    }*/
+
+    @GetMapping("/check/me")
+    public Mono<ResponseEntity<CustomUserDetails>> checkUserAuthentication(@AuthenticationPrincipal CustomUserDetails user) {
+        if (user != null) {
+            return Mono.just(ResponseEntity.ok(user));
+        } else {
+            return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+        }
+    }
+
+    @GetMapping
+    public Flux<User> getAllUsers() {
+        return userService.getAllUsers();
+    }
+
+    @GetMapping("/{id}")
+    public Mono<User> findUserById(@PathVariable Long id) {
+        return userService.findUserById(id);
+    }
+
+    @GetMapping("/username/{username}")
+    public Mono<User> findByUsername(@PathVariable String username) {
+        return userService.findByUsername(username);
+    }
+
+    @GetMapping("/email/{email}")
+    public Mono<User> findByEmail(@PathVariable String email) {
+        return userService.findByEmail(email);
+    }
+}
+/*import com.nas.robospring.dto.JWTAuthResponse;
+import com.nas.robospring.dto.LoginRequest;
+import com.nas.robospring.dto.SignUpDto;
+import com.nas.robospring.model.Course;
+import com.nas.robospring.model.Order;
+import com.nas.robospring.model.User;
+import com.nas.robospring.service.CourseService;
+import com.nas.robospring.service.OrderService;
+import com.nas.robospring.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -19,9 +113,10 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/auth")
 public class UserController {
-
+    @Autowired
+    private JwtTokenProvider tokenProvider;
     private final UserService userService;
     private final CourseService courseService;
     private final OrderService orderService;
@@ -45,19 +140,24 @@ public class UserController {
     public Flux<Order> getOrderHistory(@PathVariable Integer userId) {
         return orderService.getOrderHistoryByUserId(userId); // Fetching order history for the user
     }
-
-    @PostMapping("/register")
-    public Mono<User> createUser(@RequestBody User user) {
-        return userService.registerUser(user);
-               /* .doOnSuccess(savedUser -> {
-                    // Logic to log or handle the newly created user if necessary
-                });*/
+    @PostMapping("/signup")
+    public Mono<ResponseEntity<User>> createUser(@RequestBody SignUpDto signUpDto) {
+        return UserService.registerUser(signUpDto)
+                .map(user -> ResponseEntity.status(HttpStatus.CREATED).body(user))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null)));
     }
+
+
     @PostMapping("/login")
-    public Mono<ResponseEntity<String>> loginUser(@RequestBody LoginRequest loginRequest) {
-        return userService.login(loginRequest.getEmail(), loginRequest.getPassword())
-                .map(foundUser -> ResponseEntity.ok("Login Successful")) // Make sure this returns a success message
-                .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
+    public Mono<ResponseEntity<JWTAuthResponse>> authenticateUser(@RequestBody LoginRequest loginRequest) {
+        return UserService.authenticateUser(loginRequest) // Assuming authenticateUser method is implemented in AuthService
+                .map(token -> ResponseEntity.ok(new JWTAuthResponse(token)))
+                .onErrorResume(e -> Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new JWTAuthResponse("Invalid username or password"))));
+    //public Mono<ResponseEntity<String>> loginUser(@RequestBody LoginRequest loginRequest) {
+
+//                .map(foundUser -> ResponseEntity.ok("Login Successful")) // Make sure this returns a success message
+//                .defaultIfEmpty(ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
         //  .map(user -> "Login successful!") // Customize this as needed
         //    .switchIfEmpty(Mono.error(new Exception("Login failed!"))); // Handle failed login attempts
     }
@@ -89,8 +189,26 @@ public class UserController {
     public Mono<User> findByEmail(String email) {
         return userService.findByEmail(email);
     }
-}
+}*/
+/*    @PostMapping("/register")
+    public Mono<User> createUser(@RequestBody User user) {
+        return userService.registerUser(user);
+               *//* .doOnSuccess(savedUser -> {
+                    // Logic to log or handle the newly created user if necessary
+                });*//*
+    }*/
+/*    @PostMapping("/login")
+    public Mono<ResponseEntity<String>> loginUser(@RequestBody LoginRequest loginRequest) {
+        if (loginRequest.getUsername() == null || loginRequest.getPassword() == null) {
+            return Mono.just(ResponseEntity.badRequest().body("Username and password must not be empty."));
+        }
 
+        return userService.login(loginRequest.getUsername(), loginRequest.getPassword())
+                .map(token -> ResponseEntity.ok(token))
+                .onErrorResume(e -> {
+                    // Handle specific exceptions if needed
+                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials."));
+                });*/
 /*@PostMapping("/login")  // Endpoint for user login
     public Mono<ResponseEntity<String>> login(@RequestBody LoginRequest loginRequest) {
         return Mono.fromCallable(() -> {

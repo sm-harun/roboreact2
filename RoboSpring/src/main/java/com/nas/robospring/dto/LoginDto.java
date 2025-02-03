@@ -6,7 +6,13 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class Response {
-    private String responsetext;
+public class LoginDto {
+    private String username;
+    private String password;
 
+
+
+
+
+// Getters and Setters
 }

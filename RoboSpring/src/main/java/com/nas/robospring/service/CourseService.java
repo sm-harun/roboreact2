@@ -9,8 +9,12 @@ import reactor.core.publisher.Mono;
 
 @Service
 public class CourseService {
-    @Autowired
-    private CourseRepository courseRepository;
+//    @Autowired
+    private final CourseRepository courseRepository;
+
+    public CourseService(CourseRepository courseRepository) {
+        this.courseRepository = courseRepository;
+    }
 
     public Flux<Course> getAllCourses() {
         return courseRepository.findAll(); // Retrieve all courses

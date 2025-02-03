@@ -8,8 +8,8 @@ import reactor.core.publisher.Mono;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(Exception.class)
-    public Mono<ResponseEntity<String>> handleException(Exception e) {
-        return Mono.just(ResponseEntity.badRequest().body(e.getMessage()));
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Mono<ResponseEntity<String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return Mono.just(ResponseEntity.badRequest().body(ex.getMessage()));
     }
 }

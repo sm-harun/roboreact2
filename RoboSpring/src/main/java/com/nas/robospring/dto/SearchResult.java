@@ -17,5 +17,4 @@ public class SearchResult {
         this.id = id;
     }
 
-    // Getters and Setters
 }

@@ -4,7 +4,21 @@ import axios from 'axios';
 const api = axios.create({
     baseURL: 'http://localhost:8083/api', // Replace with your actual backend API URL
 });
-
+api.interceptors.request.use(
+    request => {
+        const token = localStorage.getItem('token');
+        console.log('Requesting:', request);
+        console.log('Token:', token);
+        if (token) {
+            request.headers.Authorization = `Bearer ${token}`;
+        }
+        return request;
+    },
+    error => {
+        console.error('Request error:', error);
+        return Promise.reject(error);
+    }
+);
 /*// Interceptors for adding JWT to headers
 api.interceptors.request.use(
     (config) => {
