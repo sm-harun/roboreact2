@@ -13,7 +13,7 @@ import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 import org.springframework.web.server.WebFilterChain;
 import reactor.core.publisher.Mono;
-
+//Uses a JwtAuthenticationFilter to validate tokens and set the Authentication object in the SecurityContext.
 @Component
 public class JwtAuthenticationFilter implements WebFilter {
 
