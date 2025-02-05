@@ -121,7 +121,20 @@ public class SecurityConfig {
                 .and()*/
 /*
 
+CORS Issues
+Ensure the backend allows requests from the frontend (React Native app).
+Example CORS configuration:
+@Bean
+public CorsWebFilter corsWebFilter() {
+    CorsConfiguration corsConfig = new CorsConfiguration();
+    corsConfig.addAllowedOrigin("*");
+    corsConfig.addAllowedMethod("*");
+    corsConfig.addAllowedHeader("*");
 
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", corsConfig);
+
+    return new CorsWebFilter(source);
 The error message you are encountering, Parameter 1 of constructor in com.nas.restaurantapp.controller.UserController required a bean of type 'org.springframework.security.authentication.AuthenticationManager' that could not be found, indicates that Spring is unable to find a bean definition for the AuthenticationManager that your UserController needs.
 
 To resolve this, you will need to ensure that your security configuration correctly defines the AuthenticationManager bean for your Spring Boot application. Below are the steps to set it up:

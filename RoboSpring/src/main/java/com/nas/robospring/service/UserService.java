@@ -30,7 +30,11 @@ public class UserService {
     private JwtUtil jwtUtil; // JWT utility for generating tokens
     @Autowired
     private JwtTokenProvider jwtTokenProvider; // JWT utility for generating tokens
-
+ /*   public Mono<User> authenticate(String username, String password) {
+        return userRepository.findByUsername(username)
+                .filter(user -> passwordEncoder.matches(password, user.getPassword()))
+                .switchIfEmpty(Mono.error(new RuntimeException("Invalid credentials")));
+    }*/
     // Method to register a new user
     public Mono<ResponseEntity<User>> registerUser(SignUpDto signUpDto) {
         return userRepository.existsByUsername(signUpDto.getUsername())

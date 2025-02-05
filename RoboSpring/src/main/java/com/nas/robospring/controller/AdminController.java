@@ -1,6 +1,7 @@
 package com.nas.robospring.controller;
 
 import com.nas.robospring.model.Payment;
+import com.nas.robospring.model.PaymentTransaction;
 import com.nas.robospring.model.User;
 import com.nas.robospring.service.PaymentService;
 import com.nas.robospring.service.UserService;
@@ -24,7 +25,7 @@ public class AdminController {
     }
 
     @GetMapping("/payments")
-    public Flux<Payment> getAllPayments() {
+    public Flux<PaymentTransaction> getAllPayments() {
         return paymentService.getAllPayments(); // Return flux of all payments
     }
 

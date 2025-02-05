@@ -41,7 +41,8 @@ public class AuthController {
 
     @Autowired
     private JwtTokenProvider tokenProvider;
-
+    @Autowired
+    private JwtUtil jwtUtil; // JWT utility for generating tokens
     @PostMapping("/signup")
     public Mono<ResponseEntity<User>> registerUser(@RequestBody SignUpDto signUpDto) {
         // Check for existing username or email in one reactive chain
@@ -75,13 +76,28 @@ public class AuthController {
                 .flatMap(authentication -> {
                     // Logic to create and return JWT token
                     String token = tokenProvider.generateToken(authentication);
-                    return Mono.just(ResponseEntity.ok(new JWTAuthResponse(token)));
+/*
+                    return Mono.just(ResponseEntity.ok(new JWTAuthResponse(token))); // Close parentheses for method
+*/
+                    return Mono.just(ResponseEntity.ok(new JWTAuthResponse(token,"Bearer"))); // Close parentheses for method
+
                 })
                 .onErrorResume(AuthenticationException.class, e ->
                         Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                                 .body(new JWTAuthResponse("Invalid username or password"))));
     }
+/*    public Mono<ResponseEntity<JWTAuthResponse>> login(@RequestBody LoginDto loginRequest) {
+        return userService.authenticate(loginRequest.getUsername(), loginRequest.getPassword())
+                .map(user -> {
+//                    String token = jwtUtil.generateToken(user.getUsername());
+                               String token = tokenProvider.generateToken(user.getUsername());
 
+                    return ResponseEntity.ok(new JWTAuthResponse(token, "Bearer"));
+                })
+                .onErrorResume(e -> {
+                    return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(new AuthResponse(null, null)));
+                });
+    }*/
     @GetMapping("/user/{username}")
     public Mono<ResponseEntity<UserWithRoles>> getUserWithRoles(@PathVariable String username) {
         return userService.findUserWithRolesByUsername(username)
